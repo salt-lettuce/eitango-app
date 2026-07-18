@@ -2,8 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { defaultWords } from "@/lib/wordData";
-import { loadCustomWords, loadProgress, saveCustomWords } from "@/lib/storage";
-import { ProgressMap, Word } from "@/lib/types";
+import {
+  applyWordMeta,
+  loadCustomWords,
+  loadProgress,
+  loadWordMeta,
+  saveCustomWords,
+  setWordMeta,
+} from "@/lib/storage";
+import { ProgressMap, Word, WordMeta, WordMetaMap } from "@/lib/types";
 import FlashcardMode from "@/components/FlashcardMode";
 import QuizMode from "@/components/QuizMode";
 import WordListMode from "@/components/WordListMode";
@@ -21,15 +28,24 @@ export default function Home() {
   const [tab, setTab] = useState<Tab>("flashcard");
   const [customWords, setCustomWords] = useState<Word[]>([]);
   const [progress, setProgress] = useState<ProgressMap>({});
+  const [wordMeta, setWordMetaState] = useState<WordMetaMap>({});
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setCustomWords(loadCustomWords());
     setProgress(loadProgress());
+    setWordMetaState(loadWordMeta());
     setReady(true);
   }, []);
 
-  const words = useMemo(() => [...defaultWords, ...customWords], [customWords]);
+  const words = useMemo(
+    () => applyWordMeta([...defaultWords, ...customWords], wordMeta),
+    [customWords, wordMeta]
+  );
+
+  const handleUpdateMeta = (id: string, patch: WordMeta) => {
+    setWordMetaState((prev) => setWordMeta(prev, id, patch));
+  };
 
   const handleAddWord = (word: Word) => {
     const updated = [...customWords, word];
@@ -84,6 +100,7 @@ export default function Home() {
             progress={progress}
             onAddWord={handleAddWord}
             onDeleteWord={handleDeleteWord}
+            onUpdateMeta={handleUpdateMeta}
           />
         )}
       </section>

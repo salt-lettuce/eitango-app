@@ -1,7 +1,8 @@
-import { ProgressMap, Word, WordProgress } from "./types";
+import { ProgressMap, Word, WordMeta, WordMetaMap, WordProgress } from "./types";
 
 const PROGRESS_KEY = "eitango:progress";
 const CUSTOM_WORDS_KEY = "eitango:customWords";
+const WORD_META_KEY = "eitango:wordMeta";
 
 const emptyProgress = (): WordProgress => ({
   status: "new",
@@ -69,4 +70,40 @@ export function loadCustomWords(): Word[] {
 export function saveCustomWords(words: Word[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(CUSTOM_WORDS_KEY, JSON.stringify(words));
+}
+
+export function loadWordMeta(): WordMetaMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(WORD_META_KEY);
+    return raw ? (JSON.parse(raw) as WordMetaMap) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveWordMeta(meta: WordMetaMap) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(WORD_META_KEY, JSON.stringify(meta));
+}
+
+export function setWordMeta(meta: WordMetaMap, wordId: string, patch: WordMeta): WordMetaMap {
+  const updated: WordMetaMap = {
+    ...meta,
+    [wordId]: { ...meta[wordId], ...patch },
+  };
+  saveWordMeta(updated);
+  return updated;
+}
+
+export function applyWordMeta(words: Word[], meta: WordMetaMap): Word[] {
+  return words.map((word) => {
+    const override = meta[word.id];
+    if (!override) return word;
+    return {
+      ...word,
+      partOfSpeech: override.partOfSpeech ?? word.partOfSpeech,
+      tags: override.tags ?? word.tags,
+    };
+  });
 }

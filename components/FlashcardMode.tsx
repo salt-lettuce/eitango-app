@@ -42,6 +42,11 @@ export default function FlashcardMode({ words, progress, onProgressChange }: Pro
         onClick={() => setFlipped((f) => !f)}
         className="w-full max-w-md h-56 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center gap-3 p-6 text-center transition hover:shadow-md dark:bg-slate-900 dark:border-slate-700"
       >
+        {word.partOfSpeech && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+            {word.partOfSpeech}
+          </span>
+        )}
         {!flipped ? (
           <span className="text-3xl font-semibold">{word.en}</span>
         ) : (
