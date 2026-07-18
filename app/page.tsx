@@ -53,6 +53,12 @@ export default function Home() {
     saveCustomWords(updated);
   };
 
+  const handleAddWords = (newWords: Word[]) => {
+    const updated = [...customWords, ...newWords];
+    setCustomWords(updated);
+    saveCustomWords(updated);
+  };
+
   const handleDeleteWord = (id: string) => {
     const updated = customWords.filter((w) => w.id !== id);
     setCustomWords(updated);
@@ -99,6 +105,7 @@ export default function Home() {
             customWords={customWords}
             progress={progress}
             onAddWord={handleAddWord}
+            onAddWords={handleAddWords}
             onDeleteWord={handleDeleteWord}
             onUpdateMeta={handleUpdateMeta}
           />

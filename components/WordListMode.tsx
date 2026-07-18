@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { PART_OF_SPEECH_OPTIONS, PartOfSpeech, ProgressMap, Word, WordMeta } from "@/lib/types";
+import { wordsFromCsvText } from "@/lib/csv";
 
 type Props = {
   words: Word[];
   customWords: Word[];
   progress: ProgressMap;
   onAddWord: (word: Word) => void;
+  onAddWords: (words: Word[]) => void;
   onDeleteWord: (id: string) => void;
   onUpdateMeta: (id: string, patch: WordMeta) => void;
 };
@@ -134,6 +136,7 @@ export default function WordListMode({
   customWords,
   progress,
   onAddWord,
+  onAddWords,
   onDeleteWord,
   onUpdateMeta,
 }: Props) {
@@ -144,6 +147,8 @@ export default function WordListMode({
   const [tagsInput, setTagsInput] = useState("");
   const [posFilter, setPosFilter] = useState<PartOfSpeech | "all">("all");
   const [tagFilter, setTagFilter] = useState<string | "all">("all");
+  const [csvText, setCsvText] = useState("");
+  const [csvMessage, setCsvMessage] = useState<string | null>(null);
 
   const customIds = new Set(customWords.map((w) => w.id));
 
@@ -174,6 +179,29 @@ export default function WordListMode({
     setExample("");
     setPos("");
     setTagsInput("");
+  };
+
+  const handleCsvImport = () => {
+    const { words: imported, skipped } = wordsFromCsvText(csvText);
+    if (imported.length === 0) {
+      setCsvMessage("有効な行が見つかりませんでした。「英単語,意味」が入力されているか確認してください。");
+      return;
+    }
+    onAddWords(imported);
+    setCsvMessage(
+      `${imported.length}件を追加しました${skipped > 0 ? `（${skipped}件はスキップされました）` : ""}。`
+    );
+    setCsvText("");
+  };
+
+  const handleCsvFile = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCsvText(String(reader.result ?? ""));
+      setCsvMessage(null);
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -224,6 +252,42 @@ export default function WordListMode({
         >
           追加する
         </button>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-700">
+        <h3 className="font-semibold mb-1">CSVで一括追加</h3>
+        <p className="text-xs text-slate-400 mb-3">
+          1行1単語で「英単語,意味,例文,品詞,タグ」の順に入力してください（例文・品詞・タグは省略可、タグは
+          <code className="mx-1">;</code>区切り）。1行目に見出し（en など）があっても自動でスキップされます。
+        </p>
+        <textarea
+          value={csvText}
+          onChange={(e) => {
+            setCsvText(e.target.value);
+            setCsvMessage(null);
+          }}
+          placeholder={"resilient,回復力のある,She showed a resilient attitude.,形容詞,性格;上級\nnegotiate,交渉する,,動詞,ビジネス"}
+          rows={4}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono dark:bg-slate-800 dark:border-slate-600"
+        />
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <label className="text-sm px-3 py-2 rounded-lg border border-slate-300 cursor-pointer hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800">
+            CSVファイルを選択
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => handleCsvFile(e.target.files?.[0])}
+            />
+          </label>
+          <button
+            onClick={handleCsvImport}
+            className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+          >
+            インポートする
+          </button>
+          {csvMessage && <span className="text-sm text-slate-500">{csvMessage}</span>}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 items-center text-sm">
