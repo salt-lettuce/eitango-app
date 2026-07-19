@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { PART_OF_SPEECH_OPTIONS, PartOfSpeech, ProgressMap, Word, WordMeta } from "@/lib/types";
 import { wordsFromCsvText } from "@/lib/csv";
+import { nextReviewLabel } from "@/lib/storage";
+import SpeakButton from "@/components/SpeakButton";
 
 type Props = {
   words: Word[];
@@ -35,12 +37,14 @@ const parseTags = (raw: string): string[] =>
 function EditableWordRow({
   word,
   status,
+  reviewLabel,
   isCustom,
   onDelete,
   onUpdateMeta,
 }: {
   word: Word;
   status: string;
+  reviewLabel: string;
   isCustom: boolean;
   onDelete: () => void;
   onUpdateMeta: (patch: WordMeta) => void;
@@ -61,10 +65,13 @@ function EditableWordRow({
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:bg-slate-900 dark:border-slate-700">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-medium">
-            {word.en} <span className="text-slate-400 font-normal">— {word.ja}</span>
+          <p className="font-medium flex items-center gap-1.5">
+            {word.en}
+            <SpeakButton text={word.en} className="text-sm text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400" />
+            <span className="text-slate-400 font-normal">— {word.ja}</span>
           </p>
           {word.example && <p className="text-xs text-slate-400">{word.example}</p>}
+          <p className="text-xs text-slate-400 mt-0.5">{reviewLabel}</p>
           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
             {word.partOfSpeech && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
@@ -324,6 +331,7 @@ export default function WordListMode({
             key={word.id}
             word={word}
             status={progress[word.id]?.status ?? "new"}
+            reviewLabel={nextReviewLabel(progress, word.id)}
             isCustom={customIds.has(word.id)}
             onDelete={() => onDeleteWord(word.id)}
             onUpdateMeta={(patch) => onUpdateMeta(word.id, patch)}

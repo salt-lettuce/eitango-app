@@ -33,6 +33,10 @@ export type WordProgress = {
   correctCount: number;
   wrongCount: number;
   lastReviewed: string | null;
+  /** Leitner box (0-5). Higher box = longer review interval. */
+  box: number;
+  /** ISO date string for the next scheduled review, or null if due immediately. */
+  nextReviewAt: string | null;
 };
 
 export type ProgressMap = Record<string, WordProgress>;

@@ -13,14 +13,16 @@ import {
 import { ProgressMap, Word, WordMeta, WordMetaMap } from "@/lib/types";
 import FlashcardMode from "@/components/FlashcardMode";
 import QuizMode from "@/components/QuizMode";
+import SpellingMode from "@/components/SpellingMode";
 import WordListMode from "@/components/WordListMode";
 import ProgressStats from "@/components/ProgressStats";
 
-type Tab = "flashcard" | "quiz" | "list";
+type Tab = "flashcard" | "quiz" | "spelling" | "list";
 
 const tabs: { key: Tab; label: string }[] = [
   { key: "flashcard", label: "フラッシュカード" },
   { key: "quiz", label: "クイズ" },
+  { key: "spelling", label: "スペル入力" },
   { key: "list", label: "単語一覧" },
 ];
 
@@ -71,7 +73,7 @@ export default function Home() {
     <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
       <header className="text-center">
         <h1 className="text-2xl font-bold">英単語暗記アプリ</h1>
-        <p className="text-sm text-slate-500 mt-1">フラッシュカードとクイズで単語を覚えよう</p>
+        <p className="text-sm text-slate-500 mt-1">フラッシュカード・クイズ・スペル入力で単語を覚えよう</p>
       </header>
 
       <ProgressStats words={words} progress={progress} />
@@ -98,6 +100,9 @@ export default function Home() {
         )}
         {tab === "quiz" && (
           <QuizMode words={words} progress={progress} onProgressChange={setProgress} />
+        )}
+        {tab === "spelling" && (
+          <SpellingMode words={words} progress={progress} onProgressChange={setProgress} />
         )}
         {tab === "list" && (
           <WordListMode

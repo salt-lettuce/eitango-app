@@ -9,7 +9,13 @@ const emptyProgress = (): WordProgress => ({
   correctCount: 0,
   wrongCount: 0,
   lastReviewed: null,
+  box: 0,
+  nextReviewAt: null,
 });
+
+/** Leitner box -> review interval in days. Box 0 is due immediately. */
+const BOX_INTERVAL_DAYS = [0, 1, 3, 7, 14, 30];
+const MAX_BOX = BOX_INTERVAL_DAYS.length - 1;
 
 export function loadProgress(): ProgressMap {
   if (typeof window === "undefined") return {};
@@ -27,7 +33,7 @@ export function saveProgress(progress: ProgressMap) {
 }
 
 export function getWordProgress(progress: ProgressMap, wordId: string): WordProgress {
-  return progress[wordId] ?? emptyProgress();
+  return { ...emptyProgress(), ...progress[wordId] };
 }
 
 export function recordAnswer(
@@ -38,23 +44,43 @@ export function recordAnswer(
   const current = getWordProgress(progress, wordId);
   const correctCount = current.correctCount + (correct ? 1 : 0);
   const wrongCount = current.wrongCount + (correct ? 0 : 1);
-  let status: WordProgress["status"] = current.status;
-  if (correct) {
-    status = correctCount >= 3 ? "known" : "learning";
-  } else {
-    status = "learning";
-  }
+  const box = correct ? Math.min(current.box + 1, MAX_BOX) : 0;
+  const status: WordProgress["status"] = box >= MAX_BOX ? "known" : "learning";
+  const now = new Date();
+  const nextReviewAt = new Date(now.getTime() + BOX_INTERVAL_DAYS[box] * 86_400_000).toISOString();
+
   const updated: ProgressMap = {
     ...progress,
     [wordId]: {
       status,
       correctCount,
       wrongCount,
-      lastReviewed: new Date().toISOString(),
+      lastReviewed: now.toISOString(),
+      box,
+      nextReviewAt,
     },
   };
   saveProgress(updated);
   return updated;
+}
+
+/** Due words are new (never reviewed) or past their scheduled review date. */
+export function isDue(progress: ProgressMap, wordId: string): boolean {
+  const p = progress[wordId];
+  if (!p || !p.nextReviewAt) return true;
+  return new Date(p.nextReviewAt).getTime() <= Date.now();
+}
+
+export function getDueWords(words: Word[], progress: ProgressMap): Word[] {
+  return words.filter((w) => isDue(progress, w.id));
+}
+
+export function nextReviewLabel(progress: ProgressMap, wordId: string): string {
+  const p = progress[wordId];
+  if (!p || !p.nextReviewAt) return "未学習";
+  const diffDays = Math.ceil((new Date(p.nextReviewAt).getTime() - Date.now()) / 86_400_000);
+  if (diffDays <= 0) return "復習可能";
+  return `${diffDays}日後に復習`;
 }
 
 export function loadCustomWords(): Word[] {
