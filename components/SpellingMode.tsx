@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ProgressMap, Word } from "@/lib/types";
 import { recordAnswer } from "@/lib/storage";
 import { useReviewDeck } from "@/lib/useReviewDeck";
+import { maskWordInText } from "@/lib/maskWord";
 import ReviewToggle from "@/components/ReviewToggle";
 import SpeakButton from "@/components/SpeakButton";
 
@@ -116,7 +117,11 @@ export default function SpellingMode({ words, progress, onProgressChange }: Prop
             )}
             <p className="text-2xl font-semibold mt-2">{current.ja}</p>
             {current.example && (
-              <p className="text-sm text-slate-400 italic mt-1">{current.example}</p>
+              <p className="text-sm text-slate-400 italic mt-1">
+                {result === null
+                  ? maskWordInText(current.example, current.en)
+                  : current.example}
+              </p>
             )}
             <p className="text-xs text-slate-400 mt-2">この意味の英単語をつづってください</p>
           </div>
