@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ProgressMap, Word } from "@/lib/types";
 import { recordAnswer } from "@/lib/storage";
 import { useReviewDeck } from "@/lib/useReviewDeck";
+import { playCorrectSound, playWrongSound } from "@/lib/sound";
 import ReviewToggle from "@/components/ReviewToggle";
 import SpeakButton from "@/components/SpeakButton";
 
@@ -59,6 +60,8 @@ export default function QuizMode({ words, progress, onProgressChange }: Props) {
     const correct = option.id === current.id;
     const updated = recordAnswer(progress, current.id, correct);
     onProgressChange(updated);
+    if (correct) playCorrectSound();
+    else playWrongSound();
     setScore((s) => ({ correct: s.correct + (correct ? 1 : 0), total: s.total + 1 }));
     setTimeout(() => {
       setIndex((i) => i + 1);
@@ -106,7 +109,11 @@ export default function QuizMode({ words, progress, onProgressChange }: Props) {
           <p className="text-sm text-slate-500">
             {index + 1} / {order.length}
           </p>
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-center dark:bg-slate-900 dark:border-slate-700">
+          <div
+            className={`w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-sm p-6 text-center dark:bg-slate-900 dark:border-slate-700 ${
+              selected ? (selected === current.id ? "anim-correct" : "anim-wrong") : ""
+            }`}
+          >
             <div className="flex items-center justify-center gap-2">
               <p className="text-3xl font-semibold">{current.en}</p>
               <SpeakButton text={current.en} />

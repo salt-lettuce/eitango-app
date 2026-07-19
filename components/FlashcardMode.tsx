@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ProgressMap, Word } from "@/lib/types";
 import { recordAnswer } from "@/lib/storage";
 import { useReviewDeck } from "@/lib/useReviewDeck";
+import { playCorrectSound, playWrongSound } from "@/lib/sound";
 import ReviewToggle from "@/components/ReviewToggle";
 import SpeakButton from "@/components/SpeakButton";
 
@@ -18,6 +19,7 @@ export default function FlashcardMode({ words, progress, onProgressChange }: Pro
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [prevDueOnly, setPrevDueOnly] = useState(dueOnly);
+  const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
 
   if (prevDueOnly !== dueOnly) {
     setPrevDueOnly(dueOnly);
@@ -29,13 +31,17 @@ export default function FlashcardMode({ words, progress, onProgressChange }: Pro
 
   const goNext = () => {
     setFlipped(false);
+    setFeedback(null);
     setIndex((i) => (i + 1) % deck.length);
   };
 
   const handleAnswer = (correct: boolean) => {
     const updated = recordAnswer(progress, word.id, correct);
     onProgressChange(updated);
-    goNext();
+    if (correct) playCorrectSound();
+    else playWrongSound();
+    setFeedback(correct ? "correct" : "wrong");
+    setTimeout(goNext, 350);
   };
 
   return (
@@ -66,7 +72,9 @@ export default function FlashcardMode({ words, progress, onProgressChange }: Pro
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") setFlipped((f) => !f);
             }}
-            className="relative w-full max-w-md h-56 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center gap-3 p-6 text-center transition hover:shadow-md cursor-pointer dark:bg-slate-900 dark:border-slate-700"
+            className={`relative w-full max-w-md h-56 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center gap-3 p-6 text-center transition hover:shadow-md cursor-pointer dark:bg-slate-900 dark:border-slate-700 ${
+              feedback === "correct" ? "anim-correct border-emerald-400" : ""
+            } ${feedback === "wrong" ? "anim-wrong border-rose-400" : ""}`}
           >
             <div className="absolute top-3 right-3">
               <SpeakButton text={word.en} />
@@ -94,13 +102,15 @@ export default function FlashcardMode({ words, progress, onProgressChange }: Pro
           <div className="flex gap-3">
             <button
               onClick={() => handleAnswer(false)}
-              className="px-5 py-2 rounded-lg bg-rose-100 text-rose-700 font-medium hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300"
+              disabled={feedback !== null}
+              className="px-5 py-2 rounded-lg bg-rose-100 text-rose-700 font-medium hover:bg-rose-200 disabled:opacity-50 dark:bg-rose-950 dark:text-rose-300"
             >
               もう一度
             </button>
             <button
               onClick={() => handleAnswer(true)}
-              className="px-5 py-2 rounded-lg bg-emerald-100 text-emerald-700 font-medium hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
+              disabled={feedback !== null}
+              className="px-5 py-2 rounded-lg bg-emerald-100 text-emerald-700 font-medium hover:bg-emerald-200 disabled:opacity-50 dark:bg-emerald-950 dark:text-emerald-300"
             >
               覚えた
             </button>

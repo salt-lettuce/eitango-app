@@ -5,6 +5,7 @@ import { ProgressMap, Word } from "@/lib/types";
 import { recordAnswer } from "@/lib/storage";
 import { useReviewDeck } from "@/lib/useReviewDeck";
 import { maskWordInText } from "@/lib/maskWord";
+import { playCorrectSound, playWrongSound } from "@/lib/sound";
 import ReviewToggle from "@/components/ReviewToggle";
 import SpeakButton from "@/components/SpeakButton";
 
@@ -57,6 +58,8 @@ export default function SpellingMode({ words, progress, onProgressChange }: Prop
     setResult(correct ? "correct" : "wrong");
     const updated = recordAnswer(progress, current.id, correct);
     onProgressChange(updated);
+    if (correct) playCorrectSound();
+    else playWrongSound();
     setScore((s) => ({ correct: s.correct + (correct ? 1 : 0), total: s.total + 1 }));
   };
 
@@ -144,9 +147,9 @@ export default function SpellingMode({ words, progress, onProgressChange }: Prop
               spellCheck={false}
               className={`w-full rounded-lg border px-4 py-3 text-lg text-center font-mono dark:bg-slate-800 ${
                 result === "correct"
-                  ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950"
+                  ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950 anim-correct"
                   : result === "wrong"
-                    ? "border-rose-400 bg-rose-50 dark:bg-rose-950"
+                    ? "border-rose-400 bg-rose-50 dark:bg-rose-950 anim-wrong"
                     : "border-slate-300 dark:border-slate-600"
               }`}
             />
