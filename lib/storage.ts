@@ -75,6 +75,36 @@ export function getDueWords(words: Word[], progress: ProgressMap): Word[] {
   return words.filter((w) => isDue(progress, w.id));
 }
 
+const WEAK_MIN_WRONG = 2;
+const WEAK_RATIO_THRESHOLD = 1 / 3;
+
+function weakRatio(p: WordProgress): number {
+  const attempts = p.correctCount + p.wrongCount;
+  return attempts === 0 ? 0 : p.wrongCount / attempts;
+}
+
+/**
+ * A word is "weak" once it's been missed at least twice and still fails
+ * at least a third of the time. The ratio (not just a raw wrongCount) means
+ * words naturally graduate out of the list as correct answers pile up,
+ * without needing separate per-attempt history.
+ */
+export function isWeakWord(progress: ProgressMap, wordId: string): boolean {
+  const p = progress[wordId];
+  if (!p || p.wrongCount < WEAK_MIN_WRONG) return false;
+  return weakRatio(p) >= WEAK_RATIO_THRESHOLD;
+}
+
+export function getWeakWords(words: Word[], progress: ProgressMap): Word[] {
+  return words
+    .filter((w) => isWeakWord(progress, w.id))
+    .sort((a, b) => {
+      const ratioDiff = weakRatio(progress[b.id]) - weakRatio(progress[a.id]);
+      if (ratioDiff !== 0) return ratioDiff;
+      return progress[b.id].wrongCount - progress[a.id].wrongCount;
+    });
+}
+
 export function nextReviewLabel(progress: ProgressMap, wordId: string): string {
   const p = progress[wordId];
   if (!p || !p.nextReviewAt) return "未学習";

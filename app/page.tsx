@@ -14,15 +14,20 @@ import { ProgressMap, Word, WordMeta, WordMetaMap } from "@/lib/types";
 import FlashcardMode from "@/components/FlashcardMode";
 import QuizMode from "@/components/QuizMode";
 import SpellingMode from "@/components/SpellingMode";
+import PronunciationMode from "@/components/PronunciationMode";
+import WeakWordsMode from "@/components/WeakWordsMode";
 import WordListMode from "@/components/WordListMode";
 import ProgressStats from "@/components/ProgressStats";
+import { getWeakWords } from "@/lib/storage";
 
-type Tab = "flashcard" | "quiz" | "spelling" | "list";
+type Tab = "flashcard" | "quiz" | "spelling" | "pronunciation" | "weak" | "list";
 
 const tabs: { key: Tab; label: string }[] = [
   { key: "flashcard", label: "フラッシュカード" },
   { key: "quiz", label: "クイズ" },
   { key: "spelling", label: "スペル入力" },
+  { key: "pronunciation", label: "発音チェック" },
+  { key: "weak", label: "苦手克服" },
   { key: "list", label: "単語一覧" },
 ];
 
@@ -44,6 +49,8 @@ export default function Home() {
     () => applyWordMeta([...defaultWords, ...customWords], wordMeta),
     [customWords, wordMeta]
   );
+
+  const weakCount = useMemo(() => getWeakWords(words, progress).length, [words, progress]);
 
   const handleUpdateMeta = (id: string, patch: WordMeta) => {
     setWordMetaState((prev) => setWordMeta(prev, id, patch));
@@ -90,6 +97,11 @@ export default function Home() {
             }`}
           >
             {t.label}
+            {t.key === "weak" && weakCount > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px]">
+                {weakCount}
+              </span>
+            )}
           </button>
         ))}
       </nav>
@@ -103,6 +115,12 @@ export default function Home() {
         )}
         {tab === "spelling" && (
           <SpellingMode words={words} progress={progress} onProgressChange={setProgress} />
+        )}
+        {tab === "pronunciation" && (
+          <PronunciationMode words={words} progress={progress} onProgressChange={setProgress} />
+        )}
+        {tab === "weak" && (
+          <WeakWordsMode words={words} progress={progress} onProgressChange={setProgress} />
         )}
         {tab === "list" && (
           <WordListMode
