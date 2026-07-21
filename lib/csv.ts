@@ -68,7 +68,6 @@ export function wordsFromCsvText(text: string): CsvImportResult {
 
   const words: Word[] = [];
   let skipped = 0;
-  const now = Date.now();
 
   for (let i = startIndex; i < rows.length; i++) {
     const [en = "", ja = "", example = "", partOfSpeech = "", tags = ""] = rows[i];
@@ -79,7 +78,7 @@ export function wordsFromCsvText(text: string): CsvImportResult {
       continue;
     }
     words.push({
-      id: `custom-${now}-${i}`,
+      id: crypto.randomUUID(),
       en: enTrimmed,
       ja: jaTrimmed,
       example: example.trim() || undefined,

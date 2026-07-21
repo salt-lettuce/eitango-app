@@ -174,7 +174,7 @@ export default function WordListMode({
   const handleAdd = () => {
     if (!en.trim() || !ja.trim()) return;
     onAddWord({
-      id: `custom-${Date.now()}`,
+      id: crypto.randomUUID(),
       en: en.trim(),
       ja: ja.trim(),
       example: example.trim() || undefined,

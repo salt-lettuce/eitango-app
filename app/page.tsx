@@ -18,7 +18,15 @@ import PronunciationMode from "@/components/PronunciationMode";
 import WeakWordsMode from "@/components/WeakWordsMode";
 import WordListMode from "@/components/WordListMode";
 import ProgressStats from "@/components/ProgressStats";
+import AuthButton from "@/components/AuthButton";
 import { getWeakWords } from "@/lib/storage";
+import { CloudSyncStatus, useCloudSync } from "@/lib/useCloudSync";
+
+const SYNC_STATUS_LABEL: Partial<Record<CloudSyncStatus, string>> = {
+  syncing: "同期中…",
+  synced: "同期済み",
+  error: "同期エラー",
+};
 
 type Tab = "flashcard" | "quiz" | "spelling" | "pronunciation" | "weak" | "list";
 
@@ -52,6 +60,16 @@ export default function Home() {
 
   const weakCount = useMemo(() => getWeakWords(words, progress).length, [words, progress]);
 
+  const { status: syncStatus } = useCloudSync({
+    ready,
+    customWords,
+    progress,
+    wordMeta,
+    onCustomWords: setCustomWords,
+    onProgress: setProgress,
+    onWordMeta: setWordMetaState,
+  });
+
   const handleUpdateMeta = (id: string, patch: WordMeta) => {
     setWordMetaState((prev) => setWordMeta(prev, id, patch));
   };
@@ -78,6 +96,13 @@ export default function Home() {
 
   return (
     <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="flex items-center justify-end gap-2">
+        {syncStatus !== "signed-out" && SYNC_STATUS_LABEL[syncStatus] && (
+          <span className="text-xs text-slate-400">{SYNC_STATUS_LABEL[syncStatus]}</span>
+        )}
+        <AuthButton />
+      </div>
+
       <header className="text-center">
         <h1 className="text-2xl font-bold">英単語暗記アプリ</h1>
         <p className="text-sm text-slate-500 mt-1">フラッシュカード・クイズ・スペル入力で単語を覚えよう</p>
