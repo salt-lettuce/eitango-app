@@ -92,6 +92,13 @@ export default function Home() {
     saveCustomWords(updated);
   };
 
+  const handleDeleteWords = (ids: string[]) => {
+    const idSet = new Set(ids);
+    const updated = customWords.filter((w) => !idSet.has(w.id));
+    setCustomWords(updated);
+    saveCustomWords(updated);
+  };
+
   if (!ready) return null;
 
   return (
@@ -155,6 +162,7 @@ export default function Home() {
             onAddWord={handleAddWord}
             onAddWords={handleAddWords}
             onDeleteWord={handleDeleteWord}
+            onDeleteWords={handleDeleteWords}
             onUpdateMeta={handleUpdateMeta}
           />
         )}

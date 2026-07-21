@@ -13,6 +13,7 @@ type Props = {
   onAddWord: (word: Word) => void;
   onAddWords: (words: Word[]) => void;
   onDeleteWord: (id: string) => void;
+  onDeleteWords: (ids: string[]) => void;
   onUpdateMeta: (id: string, patch: WordMeta) => void;
 };
 
@@ -39,6 +40,8 @@ function EditableWordRow({
   status,
   reviewLabel,
   isCustom,
+  selected,
+  onToggleSelect,
   onDelete,
   onUpdateMeta,
 }: {
@@ -46,6 +49,8 @@ function EditableWordRow({
   status: string;
   reviewLabel: string;
   isCustom: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
   onDelete: () => void;
   onUpdateMeta: (patch: WordMeta) => void;
 }) {
@@ -64,7 +69,17 @@ function EditableWordRow({
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:bg-slate-900 dark:border-slate-700">
       <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex items-start gap-2">
+          {isCustom && (
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggleSelect}
+              aria-label={`${word.en} を選択`}
+              className="mt-1.5 shrink-0"
+            />
+          )}
+          <div className="min-w-0">
           <p className="font-medium flex items-center gap-1.5">
             {word.en}
             <SpeakButton text={word.en} className="text-sm text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400" />
@@ -86,6 +101,7 @@ function EditableWordRow({
                 #{tag}
               </span>
             ))}
+          </div>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -145,6 +161,7 @@ export default function WordListMode({
   onAddWord,
   onAddWords,
   onDeleteWord,
+  onDeleteWords,
   onUpdateMeta,
 }: Props) {
   const [en, setEn] = useState("");
@@ -156,6 +173,7 @@ export default function WordListMode({
   const [tagFilter, setTagFilter] = useState<string | "all">("all");
   const [csvText, setCsvText] = useState("");
   const [csvMessage, setCsvMessage] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const customIds = new Set(customWords.map((w) => w.id));
 
@@ -170,6 +188,36 @@ export default function WordListMode({
     if (tagFilter !== "all" && !(w.tags ?? []).includes(tagFilter)) return false;
     return true;
   });
+
+  const selectableIds = filteredWords.filter((w) => customIds.has(w.id)).map((w) => w.id);
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (allSelected) {
+        const next = new Set(prev);
+        selectableIds.forEach((id) => next.delete(id));
+        return next;
+      }
+      return new Set([...prev, ...selectableIds]);
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`選択した${selectedIds.size}件の単語を削除しますか？`)) return;
+    onDeleteWords(Array.from(selectedIds));
+    setSelectedIds(new Set());
+  };
 
   const handleAdd = () => {
     if (!en.trim() || !ja.trim()) return;
@@ -325,6 +373,22 @@ export default function WordListMode({
         </select>
       </div>
 
+      {selectableIds.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <label className="flex items-center gap-1.5 text-slate-500">
+            <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+            すべて選択
+          </label>
+          <button
+            onClick={handleBulkDelete}
+            disabled={selectedIds.size === 0}
+            className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-medium hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            選択した単語を削除{selectedIds.size > 0 ? `（${selectedIds.size}件）` : ""}
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-2">
         {filteredWords.map((word) => (
           <EditableWordRow
@@ -333,6 +397,8 @@ export default function WordListMode({
             status={progress[word.id]?.status ?? "new"}
             reviewLabel={nextReviewLabel(progress, word.id)}
             isCustom={customIds.has(word.id)}
+            selected={selectedIds.has(word.id)}
+            onToggleSelect={() => toggleSelect(word.id)}
             onDelete={() => onDeleteWord(word.id)}
             onUpdateMeta={(patch) => onUpdateMeta(word.id, patch)}
           />
