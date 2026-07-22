@@ -19,6 +19,7 @@ import WeakWordsMode from "@/components/WeakWordsMode";
 import WordListMode from "@/components/WordListMode";
 import ProgressStats from "@/components/ProgressStats";
 import AuthButton from "@/components/AuthButton";
+import ThemeToggle from "@/components/ThemeToggle";
 import { getWeakWords } from "@/lib/storage";
 import { CloudSyncStatus, useCloudSync } from "@/lib/useCloudSync";
 
@@ -107,6 +108,7 @@ export default function Home() {
         {syncStatus !== "signed-out" && SYNC_STATUS_LABEL[syncStatus] && (
           <span className="text-xs text-slate-400">{SYNC_STATUS_LABEL[syncStatus]}</span>
         )}
+        <ThemeToggle />
         <AuthButton />
       </div>
 
