@@ -259,6 +259,19 @@ export default function WordListMode({
     reader.readAsText(file);
   };
 
+  const handleDownloadTemplate = () => {
+    const csvContent =
+      "英単語,意味,例文,品詞,タグ\n" +
+      "resilient,回復力のある,She showed a resilient attitude.,形容詞,性格;上級\n";
+    const blob = new Blob([`﻿${csvContent}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "template.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-700">
@@ -315,6 +328,12 @@ export default function WordListMode({
           1行1単語で「英単語,意味,例文,品詞,タグ」の順に入力してください（例文・品詞・タグは省略可、タグは
           <code className="mx-1">;</code>区切り）。1行目に見出し（en など）があっても自動でスキップされます。
         </p>
+        <button
+          onClick={handleDownloadTemplate}
+          className="mb-3 text-sm px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
+        >
+          テンプレートをダウンロード
+        </button>
         <textarea
           value={csvText}
           onChange={(e) => {
