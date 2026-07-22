@@ -328,12 +328,6 @@ export default function WordListMode({
           1行1単語で「英単語,意味,例文,品詞,タグ」の順に入力してください（例文・品詞・タグは省略可、タグは
           <code className="mx-1">;</code>区切り）。1行目に見出し（en など）があっても自動でスキップされます。
         </p>
-        <button
-          onClick={handleDownloadTemplate}
-          className="mb-3 text-sm px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
-        >
-          テンプレートをダウンロード
-        </button>
         <textarea
           value={csvText}
           onChange={(e) => {
@@ -355,13 +349,19 @@ export default function WordListMode({
             />
           </label>
           <button
+            onClick={handleDownloadTemplate}
+            className="text-sm px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
+          >
+            テンプレートをダウンロード
+          </button>
+          <button
             onClick={handleCsvImport}
-            className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+            className="ml-auto px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
           >
             インポートする
           </button>
-          {csvMessage && <span className="text-sm text-slate-500">{csvMessage}</span>}
         </div>
+        {csvMessage && <p className="mt-2 text-sm text-slate-500">{csvMessage}</p>}
       </div>
 
       <div className="flex flex-wrap gap-2 items-center text-sm">
